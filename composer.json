@@ -1,0 +1,83 @@
+{
+    "name": "crustum/inspector",
+    "description": "Detect packages and approaches in use within a CakePHP project",
+    "type": "cakephp-plugin",
+    "license": "MIT",
+    "keywords": [
+        "cakephp",
+        "inspector",
+        "packages",
+        "scanner"
+    ],
+    "authors": [
+        {
+            "name": "Evgeny Tomenko",
+            "homepage": "https://github.com/skie"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "cakephp/cakephp": "^5.0",
+        "composer/semver": "^3.0",
+        "symfony/polyfill-php84": "^1.31",
+        "symfony/yaml": "^7.2|^8.0"
+    },
+    "require-dev": {
+        "cakephp/bake": "^3.0",
+        "phpunit/phpunit": "^11.5.5 || ^12.5",
+        "pestphp/pest": "^3.8 || ^4.1",
+        "pestphp/pest-plugin-type-coverage": "^3.6 || ^4.0",
+        "cakephp/cakephp-codesniffer": "^5.0",
+        "phpstan/phpstan": "^2.1",
+        "rector/rector": "^2.5",
+        "mockery/mockery": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Crustum\\Inspector\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TestApp\\": "tests/TestApp/",
+            "Tests\\": "tests/"
+        },
+        "files": [
+            "tests/Support/functions.php"
+        ]
+    },
+    "scripts": {
+        "check": [
+            "@cs-check",
+            "@rector-check",
+            "@test",
+            "@analyse"
+        ],
+        "fix": [
+            "@cs-fix",
+            "@rector-fix",
+            "@cs-fix",
+            "@analyse"
+        ],
+        "analyse": [
+            "@stan"
+        ],
+        "cs-check": "phpcs -p --standard=phpcs.xml src/",
+        "cs-fix": "phpcbf --standard=phpcs.xml src/",
+        "test": "pest",
+        "test:unit": "pest --testsuite=Unit",
+        "rector-check": "vendor/bin/rector process --dry-run",
+        "rector-fix": "vendor/bin/rector process",
+        "stan": "phpstan analyse src/",
+        "stan-baseline": "phpstan analyse --generate-baseline"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "pestphp/pest-plugin": true
+        },
+        "platform-check": false
+    }
+}

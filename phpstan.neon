@@ -1,0 +1,12 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+    bootstrapFiles:
+        - tests/bootstrap.php
+    tmpDir: build/phpstan
+
+services:

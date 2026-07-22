@@ -1,0 +1,9 @@
+﻿{
+    "name": "acme/accessible-default-entities-app",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}
+

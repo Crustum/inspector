@@ -1,0 +1,9 @@
+﻿{
+    "name": "acme/nested-entities-app",
+    "autoload": {
+        "psr-4": {
+            "App\\Domain\\": "src/Domain/"
+        }
+    }
+}
+

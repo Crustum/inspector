@@ -1,0 +1,26 @@
+{
+    "name": "crustum/cake-app-fixture",
+    "description": "Synthetic CakePHP project fixture for Inspector tests.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "cakephp/cakephp": "5.3.6",
+        "crustum/broadcasting": "^1.0",
+        "crustum/notification": "^1.0",
+        "crustum/rhythm": "^1.0",
+        "crustum/blazecast": "^1.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.4",
+        "cakephp/bake": "^3.0",
+        "phpstan/phpstan": "^2.0"
+    },
+    "prefer-stable": true,
+    "minimum-stability": "dev",
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

@@ -1,0 +1,9 @@
+﻿{
+    "name": "acme/accessible-whitelist-entities-app",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}
+
