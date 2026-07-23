@@ -13,7 +13,6 @@
 - [Detecting Approaches](#detecting-approaches)
 - [Caching](#caching)
 - [The `inspector scan` Command](#the-inspector-scan-command)
-- [License](#license)
 
 <a name="introduction"></a>
 ## Introduction
