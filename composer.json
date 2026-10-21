@@ -17,20 +17,20 @@
     ],
     "require": {
         "php": ">=8.2",
-        "cakephp/cakephp": "^5.0",
+        "cakephp/cakephp": "6.x-dev",
         "composer/semver": "^3.0",
         "symfony/polyfill-php84": "^1.31",
         "symfony/yaml": "^7.2|^8.0"
     },
     "require-dev": {
         "boundwize/structarmed": "0.15",
-        "cakephp/bake": "^3.0",
-        "phpunit/phpunit": "^11.5.5 || ^12.5",
+        "cakephp/bake": "4.x-dev",
+        "phpunit/phpunit": "^11.5.5 || ^12.5 || ^13.0",
         "pestphp/pest": "^3.8 || ^4.1",
         "pestphp/pest-plugin-type-coverage": "^3.6 || ^4.0",
         "cakephp/cakephp-codesniffer": "^5.0",
-        "phpstan/phpstan": "^2.1",
-        "rector/rector": "^2.5",
+        "phpstan/phpstan": "^2.3",
+        "rector/rector": "^2.7",
         "mockery/mockery": "^1.6"
     },
     "autoload": {

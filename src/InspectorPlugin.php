@@ -6,8 +6,8 @@ namespace Crustum\Inspector;
 use Cake\Cache\Cache;
 use Cake\Cache\Engine\FileEngine;
 use Cake\Console\CommandCollection;
+use Cake\Container\ContainerInterface;
 use Cake\Core\BasePlugin;
-use Cake\Core\ContainerInterface;
 use Cake\Core\PluginApplicationInterface;
 use Crustum\Inspector\Command\ScanCommand;
 use Override;
@@ -56,7 +56,7 @@ class InspectorPlugin extends BasePlugin
     /**
      * Register plugin services in the application container.
      *
-     * @param \Cake\Core\ContainerInterface $container Application container
+     * @param \Cake\Container\ContainerInterface $container Application container
      * @return void
      */
     public function services(ContainerInterface $container): void

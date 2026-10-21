@@ -4,8 +4,6 @@ declare(strict_types=1);
 namespace Crustum\Inspector\Command;
 
 use Cake\Command\Command;
-use Cake\Console\Arguments;
-use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Crustum\Inspector\ApproachResult;
 use Crustum\Inspector\ProjectManager;
@@ -46,35 +44,30 @@ class ScanCommand extends Command
     }
 
     /**
-     * Execute the command.
-     *
-     * @param \Cake\Console\Arguments $args Command arguments
-     * @param \Cake\Console\ConsoleIo $io Console IO
+     * @inheritDoc
      */
-    public function execute(Arguments $args, ConsoleIo $io): ?int
+    public function execute(): ?int
     {
-        $directory = $args->getArgument('directory');
+        $directory = $this->args->getArgument('directory');
         $basePath = is_string($directory) ? $directory : null;
         $resolved = ProjectScan::normalizeBasePath($basePath);
-
         if (!is_dir($resolved) || !is_readable($resolved)) {
-            $io->error("Directory '{$resolved}' is not a readable directory.");
+            $this->io->error("Directory '{$resolved}' is not a readable directory.");
 
             return static::CODE_ERROR;
         }
 
-        $project = $args->getOption('cached')
+        $project = $this->args->getOption('cached')
             ? $this->projectManager->scan($basePath)
             : $this->projectManager->fresh($basePath);
         $payload = $project->toArray();
-
-        if ($args->getOption('approaches')) {
+        if ($this->args->getOption('approaches')) {
             $payload['approaches'] = $project->approaches()->all()
                 ->map(fn(ApproachResult $result): array => $result->toArray())
                 ->toArray();
         }
 
-        $io->out(ProjectScan::encode($payload));
+        $this->io->out(ProjectScan::encode($payload));
 
         return static::CODE_SUCCESS;
     }

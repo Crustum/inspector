@@ -24,7 +24,7 @@ it('outputs JSON for directory with packages', function (): void {
     $this->exec('inspector scan ' . escapeshellarg($path));
 
     $this->assertExitSuccess();
-    $output = implode('', $this->_out->messages());
+    $output = implode('', $this->out->messages());
     $decoded = json_decode($output, true);
 
     expect($decoded)->toBeArray();
@@ -39,7 +39,7 @@ it('outputs empty JSON for empty directory', function (): void {
     $this->exec('inspector scan ' . escapeshellarg($emptyDir));
 
     $this->assertExitSuccess();
-    $output = implode('', $this->_out->messages());
+    $output = implode('', $this->out->messages());
     $decoded = json_decode($output, true);
 
     expect($decoded)->toBeArray();
@@ -56,14 +56,14 @@ it('includes approaches only when requested', function (): void {
     $this->exec('inspector scan ' . escapeshellarg($path));
 
     $this->assertExitSuccess();
-    $decoded = json_decode(implode('', $this->_out->messages()), true);
+    $decoded = json_decode(implode('', $this->out->messages()), true);
 
     expect($decoded)->not->toHaveKey('approaches');
 
     $this->exec('inspector scan ' . escapeshellarg($path) . ' --approaches');
 
     $this->assertExitSuccess();
-    $decoded = json_decode(implode('', $this->_out->messages()), true);
+    $decoded = json_decode(implode('', $this->out->messages()), true);
 
     expect($decoded)->toHaveKey('approaches');
     expect($decoded['approaches'])->toHaveKey('entity-accessible-whitelist');
@@ -77,7 +77,7 @@ it('encodes a whole confidence as a float so the field keeps one json type', fun
     $this->exec('inspector scan ' . escapeshellarg($path) . ' --approaches');
 
     $this->assertExitSuccess();
-    $output = implode('', $this->_out->messages());
+    $output = implode('', $this->out->messages());
 
     expect($output)->toContain('"confidence": 1.0')
         ->and($output)->not->toContain('"confidence": 1,');
@@ -87,7 +87,7 @@ it('defaults to the working directory when no directory is given', function (): 
     $this->exec('inspector scan');
 
     $this->assertExitSuccess();
-    $decoded = json_decode(implode('', $this->_out->messages()), true);
+    $decoded = json_decode(implode('', $this->out->messages()), true);
 
     expect($decoded)->toBeArray();
     expect($decoded)->toHaveKey('php');
@@ -116,7 +116,7 @@ it('accepts --cached to use the inspector cache store', function (): void {
     $this->exec('inspector scan ' . escapeshellarg($path) . ' --cached');
 
     $this->assertExitSuccess();
-    $decoded = json_decode(implode('', $this->_out->messages()), true);
+    $decoded = json_decode(implode('', $this->out->messages()), true);
 
     expect($decoded)->toBeArray();
     expect($decoded)->toHaveKey('php');
