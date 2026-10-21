@@ -12,6 +12,7 @@ enum JsPackageManager: string
     case Pnpm = 'pnpm';
     case Yarn = 'yarn';
     case Bun = 'bun';
+    case Nub = 'nub';
 
     /**
      * Primary lockfile for this manager.
@@ -35,6 +36,7 @@ enum JsPackageManager: string
             self::Pnpm => ['pnpm-lock.yaml'],
             self::Yarn => ['yarn.lock'],
             self::Bun => ['bun.lock', 'bun.lockb'],
+            self::Nub => ['nub.lock'],
         };
     }
 }

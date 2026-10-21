@@ -13,14 +13,27 @@ use Symfony\Component\Yaml\Yaml;
 class PnpmPackageLock extends JsPackageScanner
 {
     /**
+     * Constructor.
+     *
+     * @param string $path Project base path
+     * @param string $lockFile Lockfile name (pnpm shares its parser with Nub)
+     */
+    public function __construct(
+        string $path,
+        protected string $lockFile = 'pnpm-lock.yaml',
+    ) {
+        parent::__construct($path);
+    }
+
+    /**
      * @inheritDoc
      */
     public function scan(): PackageCollection
     {
         $packages = new PackageCollection();
-        $lockFilePath = $this->path . 'pnpm-lock.yaml';
+        $lockFilePath = $this->path . $this->lockFile;
 
-        $contents = $this->readContents($lockFilePath, 'pnpm-lock.yaml');
+        $contents = $this->readContents($lockFilePath, $this->lockFile);
 
         if ($contents === null) {
             $this->failed = true;
@@ -31,14 +44,14 @@ class PnpmPackageLock extends JsPackageScanner
         try {
             $parsed = Yaml::parse($contents);
         } catch (Exception) {
-            $this->warn('Failed to parse pnpm-lock.yaml: ' . $lockFilePath);
+            $this->warn('Failed to parse ' . $this->lockFile . ': ' . $lockFilePath);
             $this->failed = true;
 
             return $packages;
         }
 
         if (!is_array($parsed)) {
-            $this->warn('Malformed pnpm-lock.yaml (empty or not a mapping): ' . $lockFilePath);
+            $this->warn('Malformed ' . $this->lockFile . ' (empty or not a mapping): ' . $lockFilePath);
             $this->failed = true;
 
             return $packages;

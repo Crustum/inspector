@@ -23,6 +23,7 @@
         "symfony/yaml": "^7.2|^8.0"
     },
     "require-dev": {
+        "boundwize/structarmed": "0.15",
         "cakephp/bake": "^3.0",
         "phpunit/phpunit": "^11.5.5 || ^12.5",
         "pestphp/pest": "^3.8 || ^4.1",
@@ -69,7 +70,8 @@
         "rector-check": "vendor/bin/rector process --dry-run",
         "rector-fix": "vendor/bin/rector process",
         "stan": "phpstan analyse src/",
-        "stan-baseline": "phpstan analyse --generate-baseline"
+        "stan-baseline": "phpstan analyse --generate-baseline",
+        "structarmed": "vendor/bin/structarmed analyze src"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

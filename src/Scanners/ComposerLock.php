@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 namespace Crustum\Inspector\Scanners;
 
+use Composer\Semver\VersionParser;
 use Crustum\Inspector\Enums\PackageSource;
 use Crustum\Inspector\PackageCollection;
+use UnexpectedValueException;
 
 /**
  * Scans composer.lock for installed PHP packages.
@@ -32,6 +34,40 @@ class ComposerLock extends PackageScanner
         $this->processDependencies($this->versions($json['packages-dev'] ?? null), $packages, true, authoritative: true);
 
         return $packages;
+    }
+
+    /**
+     * Minimum PHP major.minor version required by the root composer.json.
+     *
+     * Returns null when the requirement is missing or has no usable lower bound.
+     *
+     * @return string|null
+     */
+    public function minimumPhpVersion(): ?string
+    {
+        $require = $this->manifest()['require'] ?? null;
+
+        if (!is_array($require) || !is_string($require['php'] ?? null)) {
+            return null;
+        }
+
+        try {
+            $lowerBound = (new VersionParser())
+                ->parseConstraints($require['php'])
+                ->getLowerBound();
+        } catch (UnexpectedValueException) {
+            return null;
+        }
+
+        if ($lowerBound->isZero()) {
+            return null;
+        }
+
+        if (preg_match('/^(\d+)\.(\d+)/', $lowerBound->getVersion(), $matches) !== 1) {
+            return null;
+        }
+
+        return $matches[1] . '.' . $matches[2];
     }
 
     /**

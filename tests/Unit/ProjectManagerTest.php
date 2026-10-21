@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Crustum\Inspector\Enums\Agent;
 use Crustum\Inspector\Enums\Approach;
+use Crustum\Inspector\Enums\JsPackageManager;
 use Crustum\Inspector\ProjectManager;
 use Tests\Support\Cache\CorruptReadCacheEngine;
 use Tests\Support\Cache\DownCacheEngine;
@@ -54,6 +55,28 @@ it('returns the cached project for an unchanged directory', function (): void {
     $manager = new ProjectManager();
 
     expect($manager->scan($base))->toBe($manager->scan($base));
+
+    cleanup($base);
+});
+
+it('invalidates the cache when nub.lock appears or changes', function (): void {
+    $base = fixtureCopy(['cake-app/package.json' => 'package.json']);
+    $manager = new ProjectManager();
+
+    expect($manager->scan($base)->js()->packageManager())->toBeNull();
+
+    $contents = file_get_contents(testDirectory('cake-app/pnpm-lock.yaml'));
+    file_put_contents($base . 'nub.lock', $contents);
+
+    $project = $manager->scan($base);
+    expect($project->js()->usesPackageManager(JsPackageManager::Nub))->toBeTrue()
+        ->and($project->js()->usesPackageManager('nub'))->toBeTrue()
+        ->and($project->toArray()['jsPackageManager'])->toBe('nub')
+        ->and($project->js()->uses('tailwindcss', '3.4.3'))->toBeTrue();
+
+    file_put_contents($base . 'nub.lock', str_replace('3.4.3', '3.4.4', $contents));
+
+    expect($manager->scan($base)->js()->uses('tailwindcss', '3.4.4'))->toBeTrue();
 
     cleanup($base);
 });

@@ -4,6 +4,7 @@
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
 - [Detecting Packages](#detecting-packages)
+    - [Minimum PHP Version](#minimum-php-version)
     - [Version Constraints](#version-constraints)
     - [Checking Multiple Packages](#checking-multiple-packages)
     - [Retrieving Packages](#retrieving-packages)
@@ -108,6 +109,14 @@ $project->php()->uses('cakephp/cakephp');
 $project->js()->uses('vue');
 ```
 
+### Minimum PHP Version
+
+The PHP ecosystem reports the minimum major and minor version required by the root `composer.json` `require.php` constraint. When the requirement is missing or has no usable lower bound, Inspector falls back to the running PHP version:
+
+```php
+$project->minimumPhpVersion(); // "8.3"
+```
+
 <a name="version-constraints"></a>
 ### Version Constraints
 
@@ -168,7 +177,7 @@ $project->php()->packages()->direct();
 ```
 
 > [!NOTE]
-> The development classification of *transitive* packages is available only for Composer and npm lockfiles. Yarn, pnpm, and Bun lockfiles report transitive packages as production dependencies. Direct dependencies are classified using authoritative lockfile metadata when available and manifest data otherwise.
+> The development classification of *transitive* packages is available only for Composer and npm lockfiles. Yarn, pnpm, Bun, and Nub lockfiles report transitive packages as production dependencies. Direct dependencies are classified using authoritative lockfile metadata when available and manifest data otherwise.
 
 <a name="detecting-stacks-and-frontends"></a>
 ## Detecting Stacks and Frontends
@@ -241,7 +250,9 @@ $project->js()->usesPackageManager(JsPackageManager::Pnpm);
 $project->js()->usesPackageManager('pnpm');
 ```
 
-Projects should commit only one supported JavaScript lockfile. If multiple lockfiles are present, Inspector selects the first match in this order: npm, pnpm, Yarn, then Bun.
+Nub projects are detected through `nub.lock` and reported as `JsPackageManager::Nub` (or `'nub'`). Its pnpm v9 format is scanned for direct and transitive dependencies using the same parser as pnpm.
+
+Projects should commit only one supported JavaScript lockfile. If multiple lockfiles are present, Inspector selects the first match in this order: npm, pnpm, Yarn, Bun, then Nub.
 
 <a name="detecting-approaches"></a>
 ## Detecting Approaches

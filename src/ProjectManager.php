@@ -142,6 +142,16 @@ class ProjectManager
     }
 
     /**
+     * Minimum PHP version from the default scan.
+     *
+     * @return string
+     */
+    public function minimumPhpVersion(): string
+    {
+        return $this->instance()->minimumPhpVersion();
+    }
+
+    /**
      * Detected approaches from the default scan.
      *
      * @return \Crustum\Inspector\Support\ApproachSet
@@ -207,7 +217,7 @@ class ProjectManager
      */
     private function cacheKey(string $basePath): string
     {
-        return 'inspector:project:v3:' . md5(
+        return 'inspector:project:v4:' . md5(
             $basePath . '|' . $this->lockfileHash($basePath) . '|' . $this->markerHash($basePath),
         );
     }

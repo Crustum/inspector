@@ -78,21 +78,59 @@ it('prefers package-lock.json when multiple lockfiles are committed', function (
     cleanup($base);
 });
 
-it('scans pnpm-lock.yaml when it is the committed lockfile', function (): void {
+it('scans pnpm-format lockfiles when committed', function (JsPackageManager $manager): void {
     $base = fixtureCopy([
         'cake-app/package.json' => 'package.json',
-        'cake-app/pnpm-lock.yaml' => 'pnpm-lock.yaml',
+        'cake-app/pnpm-lock.yaml' => $manager->lockFile(),
     ]);
 
     $lockfile = new JsLockfile($base);
 
-    expect($lockfile->committedManager())->toBe(JsPackageManager::Pnpm);
+    expect($lockfile->committedManager())->toBe($manager);
 
-    $tailwind = inspectorCollection($lockfile->scan())->first(fn ($p): bool => $p->name() === 'tailwindcss');
-    expect($tailwind->version())->toEqual('3.4.3');
+    $packages = $lockfile->scan();
+    $tailwind = inspectorCollection($packages)->first(fn ($p): bool => $p->name() === 'tailwindcss');
+    expect($tailwind->version())->toEqual('3.4.3')
+        ->and($tailwind->isDirect())->toBeTrue()
+        ->and($tailwind->isDev())->toBeFalse()
+        ->and($tailwind->path())->toEndWith('node_modules' . DIRECTORY_SEPARATOR . 'tailwindcss');
+
+    $alpine = inspectorCollection($packages)->first(fn ($p): bool => $p->name() === 'alpinejs');
+    expect($alpine->version())->toBe('3.14.8')
+        ->and($alpine->isDirect())->toBeTrue()
+        ->and($alpine->isDev())->toBeTrue();
+
+    $quickLru = inspectorCollection($packages)->first(fn ($p): bool => $p->name() === '@alloc/quick-lru');
+    expect($quickLru->version())->toBe('5.2.0')
+        ->and($quickLru->isDirect())->toBeFalse();
 
     cleanup($base);
-});
+})->with([JsPackageManager::Pnpm, JsPackageManager::Nub]);
+
+it('falls back to the manifest when nub.lock cannot be parsed', function (string $contents): void {
+    $base = tempBase();
+    file_put_contents($base . 'nub.lock', $contents);
+    file_put_contents($base . 'package.json', json_encode(['dependencies' => ['vue' => '^3.4.0']]));
+
+    $lockfile = new JsLockfile($base);
+    $vue = inspectorCollection($lockfile->scan())->first(fn ($p): bool => $p->name() === 'vue');
+
+    expect($lockfile->committedManager())->toBe(JsPackageManager::Nub)
+        ->and($vue->version())->toBe('3.4.0')
+        ->and($vue->isDirect())->toBeTrue();
+
+    cleanup($base);
+})->with(['empty' => '', 'invalid YAML' => 'packages: [']);
+
+it('preserves lockfile precedence when nub.lock is also present', function (JsPackageManager $manager): void {
+    $base = tempBase();
+    touchFile($base . $manager->lockFile());
+    touchFile($base . 'nub.lock');
+
+    expect((new JsLockfile($base))->committedManager())->toBe($manager);
+
+    cleanup($base);
+})->with([JsPackageManager::Npm, JsPackageManager::Pnpm, JsPackageManager::Yarn, JsPackageManager::Bun]);
 
 it('scans yarn.lock when it is the committed lockfile', function (): void {
     $base = fixtureCopy([

@@ -42,6 +42,7 @@ class ProjectScan
      * @param \Crustum\Inspector\Support\EnumSet<\Crustum\Inspector\Enums\Frontend> $frontends Detected frontends
      * @param \Crustum\Inspector\Support\EnumSet<\Crustum\Inspector\Enums\Agent> $agents Detected agents
      * @param \Crustum\Inspector\Support\EnumSet<\Crustum\Inspector\Enums\Editor> $editors Detected editors
+     * @param string|null $minimumPhpVersion Minimum required PHP major.minor version
      */
     public function __construct(
         protected string $basePath,
@@ -52,6 +53,7 @@ class ProjectScan
         protected EnumSet $frontends,
         protected EnumSet $agents,
         protected EnumSet $editors,
+        protected ?string $minimumPhpVersion = null,
     ) {
     }
 
@@ -126,6 +128,18 @@ class ProjectScan
     }
 
     /**
+     * Minimum PHP major.minor version required by the project.
+     *
+     * Falls back to the running PHP version when the project declares none.
+     *
+     * @return string
+     */
+    public function minimumPhpVersion(): string
+    {
+        return $this->minimumPhpVersion ?? PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+    }
+
+    /**
      * Detected source-code approaches.
      *
      * @return \Crustum\Inspector\Support\ApproachSet
@@ -146,7 +160,8 @@ class ProjectScan
     {
         $basePath = self::normalizeBasePath($basePath);
 
-        $phpPackages = (new ComposerLock($basePath))->scan();
+        $composer = new ComposerLock($basePath);
+        $phpPackages = $composer->scan();
 
         $jsLockfile = new JsLockfile($basePath);
         $jsPackages = $jsLockfile->scan();
@@ -163,6 +178,7 @@ class ProjectScan
             new EnumSet(FrontendDetector::detect($js)),
             new EnumSet(AgentsDetector::detect($basePath)),
             new EnumSet(EditorsDetector::detect($basePath)),
+            $composer->minimumPhpVersion(),
         );
     }
 
@@ -192,6 +208,7 @@ class ProjectScan
             'frontends' => $this->frontends->values(),
             'agents' => $this->agents->values(),
             'editors' => $this->editors->values(),
+            'minimumPhpVersion' => $this->minimumPhpVersion(),
             'jsPackageManager' => $this->js->packageManager()?->value,
         ];
     }
