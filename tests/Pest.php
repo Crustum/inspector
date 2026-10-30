@@ -11,7 +11,7 @@ use Crustum\Inspector\PackageCollection;
 expect()->extend('toBeOne', fn() => $this->toBe(1));
 
 /**
- * @param array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool}> $specs
+ * @param array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool, type?: string}> $specs
  */
 function phpEcosystem(array $specs): Ecosystem
 {
@@ -19,7 +19,7 @@ function phpEcosystem(array $specs): Ecosystem
 }
 
 /**
- * @param array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool}> $specs
+ * @param array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool, type?: string}> $specs
  */
 function jsEcosystem(array $specs): JsEcosystem
 {
@@ -30,7 +30,7 @@ function jsEcosystem(array $specs): JsEcosystem
 }
 
 /**
- * @param array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool}> $specs
+ * @param array<int, string|array{name: string, version?: string, dev?: bool, direct?: bool, type?: string}> $specs
  */
 function packagesFromSpecs(array $specs, PackageSource $source): PackageCollection
 {
@@ -47,6 +47,7 @@ function packagesFromSpecs(array $specs, PackageSource $source): PackageCollecti
             source: $source,
             dev: $spec['dev'] ?? false,
             direct: $spec['direct'] ?? true,
+            type: $spec['type'] ?? '',
         ));
     }
 

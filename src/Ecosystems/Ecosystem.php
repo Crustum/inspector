@@ -112,6 +112,41 @@ class Ecosystem
     }
 
     /**
+     * Packages matching a composer type (e.g. `cakephp-plugin`).
+     *
+     * @param string $type Package type to match
+     * @return \Crustum\Inspector\PackageCollection
+     */
+    public function byType(string $type): PackageCollection
+    {
+        return $this->packages->byType($type);
+    }
+
+    /**
+     * Installed CakePHP plugins (`type: cakephp-plugin`).
+     *
+     * Includes unloaded plugins; use `Plugin::loaded()` separately
+     * when the loaded state matters.
+     *
+     * @return \Crustum\Inspector\PackageCollection
+     */
+    public function cakePlugins(): PackageCollection
+    {
+        return $this->packages->byType('cakephp-plugin');
+    }
+
+    /**
+     * Whether any package of the given composer type is present.
+     *
+     * @param string $type Package type to check
+     * @return bool
+     */
+    public function usesType(string $type): bool
+    {
+        return $this->byType($type)->count() > 0;
+    }
+
+    /**
      * Check semver satisfaction for a package.
      *
      * @param string $name Package name

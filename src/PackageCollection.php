@@ -80,6 +80,31 @@ class PackageCollection implements Countable, IteratorAggregate
     }
 
     /**
+     * Packages matching a composer type (e.g. `cakephp-plugin`).
+     *
+     * @param string $type Package type to match
+     * @return static
+     */
+    public function byType(string $type): static
+    {
+        return $this->byTypes([$type]);
+    }
+
+    /**
+     * Packages matching any of the given composer types.
+     *
+     * @param list<string> $types Package types to match
+     * @return static
+     */
+    public function byTypes(array $types): static
+    {
+        return new static(array_values(array_filter(
+            $this->items,
+            fn(Package $package): bool => in_array($package->type(), $types, true),
+        )));
+    }
+
+    /**
      * @inheritDoc
      */
     public function getIterator(): Traversable

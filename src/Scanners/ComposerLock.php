@@ -30,8 +30,8 @@ class ComposerLock extends PackageScanner
             $this->warn('Malformed composer.lock (missing "packages" key): ' . $this->path . 'composer.lock');
         }
 
-        $this->processDependencies($this->versions($json['packages'] ?? null), $packages, false, authoritative: true);
-        $this->processDependencies($this->versions($json['packages-dev'] ?? null), $packages, true, authoritative: true);
+        $this->processDependencies($this->entries($json['packages'] ?? null), $packages, false, authoritative: true);
+        $this->processDependencies($this->entries($json['packages-dev'] ?? null), $packages, true, authoritative: true);
 
         return $packages;
     }
@@ -113,18 +113,18 @@ class ComposerLock extends PackageScanner
     }
 
     /**
-     * Extract package versions from lockfile entries.
+     * Extract package versions and types from lockfile entries.
      *
      * @param mixed $rawPackages Lockfile package list
-     * @return array<string, string>
+     * @return array<string, array{version: string, type: string}>
      */
-    private function versions(mixed $rawPackages): array
+    private function entries(mixed $rawPackages): array
     {
         if (!is_array($rawPackages)) {
             return [];
         }
 
-        $versions = [];
+        $entries = [];
 
         foreach ($rawPackages as $raw) {
             if (!is_array($raw)) {
@@ -141,11 +141,36 @@ class ComposerLock extends PackageScanner
             }
 
             $version = $raw['version'] ?? null;
+            $type = $raw['type'] ?? null;
 
-            $versions[$name] = is_string($version) ? $version : '';
+            $entries[$name] = [
+                'version' => is_string($version) ? $version : '',
+                'type' => is_string($type) ? $type : '',
+            ];
         }
 
-        return $versions;
+        return $entries;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function resolveType(string $packageName, string $type, string $path): string
+    {
+        if ($type !== '') {
+            return $type;
+        }
+
+        $composerJson = $path . DIRECTORY_SEPARATOR . 'composer.json';
+        $manifest = self::readJsonFile($composerJson);
+
+        if (!is_array($manifest)) {
+            return '';
+        }
+
+        $manifestType = $manifest['type'] ?? null;
+
+        return is_string($manifestType) ? $manifestType : '';
     }
 
     /**

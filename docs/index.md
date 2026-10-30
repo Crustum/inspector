@@ -8,6 +8,7 @@
     - [Version Constraints](#version-constraints)
     - [Checking Multiple Packages](#checking-multiple-packages)
     - [Retrieving Packages](#retrieving-packages)
+    - [Filtering by Composer Type](#filtering-by-type)
 - [Detecting Stacks and Frontends](#detecting-stacks-and-frontends)
 - [Detecting Agents and Editors](#detecting-agents-and-editors)
 - [Detecting JS Package Managers](#detecting-js-package-managers)
@@ -174,6 +175,20 @@ $project->php()->usesDirect('cakephp/bake');
 $project->php()->usesDirect(['cakephp/bake', 'cakephp/queue']);
 $project->php()->packages()->dev();
 $project->php()->packages()->direct();
+```
+
+<a name="filtering-by-type"></a>
+### Filtering by Composer Type
+
+Composer packages carry a `type` (e.g. `library`, `cakephp-plugin`). Inspector preserves it from `composer.lock` and falls back to the installed package's `composer.json` when the lock entry has none. Use `type()` on a single package, or filter whole collections without affecting the serialized shape:
+
+```php
+$project->php()->package('cakephp/queue')?->type(); // 'cakephp-plugin'
+
+$project->php()->byType('cakephp-plugin')->all();
+$project->php()->cakePlugins()->all(); // shortcut for the above
+$project->php()->usesType('cakephp-plugin'); // true when any plugin is installed
+$project->php()->packages()->byTypes(['cakephp-plugin', 'library']);
 ```
 
 > [!NOTE]
