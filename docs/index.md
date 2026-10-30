@@ -191,6 +191,24 @@ $project->php()->usesType('cakephp-plugin'); // true when any plugin is installe
 $project->php()->packages()->byTypes(['cakephp-plugin', 'library']);
 ```
 
+<a name="resolving-plugin-classes"></a>
+### Resolving Plugin Classes
+
+For `cakephp-plugin` packages Inspector also resolves the plugin class and Cake name, so consumers can inspect a plugin without loading it. Files are required on demand, and the Cake name comes from the plugin `$name` default (namespace path fallback) — the plugin is never instantiated:
+
+```php
+foreach ($project->php()->cakePluginDetails() as $plugin) {
+    $plugin->package();     // 'cakephp/queue'
+    $plugin->pluginClass(); // 'Cake\Queue\QueuePlugin'
+    $plugin->name();        // 'Cake/Queue'
+    $plugin->path();        // install path
+}
+
+$project->php()->cakePluginDetails(['/path/to/local/checkout']);
+```
+
+The argument scans explicit directories (e.g. local path checkouts absent from `composer.lock`). Packages without a resolvable plugin class are skipped, and each class appears at most once.
+
 > [!NOTE]
 > The development classification of *transitive* packages is available only for Composer and npm lockfiles. Yarn, pnpm, Bun, and Nub lockfiles report transitive packages as production dependencies. Direct dependencies are classified using authoritative lockfile metadata when available and manifest data otherwise.
 

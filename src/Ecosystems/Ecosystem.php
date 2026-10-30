@@ -7,6 +7,7 @@ use Composer\Semver\Semver;
 use Composer\Semver\VersionParser;
 use Crustum\Inspector\Package;
 use Crustum\Inspector\PackageCollection;
+use Crustum\Inspector\Scanners\CakePluginResolver;
 use InvalidArgumentException;
 use UnexpectedValueException;
 
@@ -144,6 +145,25 @@ class Ecosystem
     public function usesType(string $type): bool
     {
         return $this->byType($type)->count() > 0;
+    }
+
+    /**
+     * Resolved CakePHP plugins for installed `cakephp-plugin` packages.
+     *
+     * Each entry carries the composer name, resolved plugin class, Cake
+     * name and install path — everything needed to inspect a plugin
+     * without loading it. Packages without a resolvable plugin class
+     * are skipped.
+     *
+     * @param list<string> $extraPaths Additional plugin directories to scan
+     * @return list<\Crustum\Inspector\CakePlugin>
+     */
+    public function cakePluginDetails(array $extraPaths = []): array
+    {
+        return (new CakePluginResolver())->resolve(
+            $this->packages->byType('cakephp-plugin')->all(),
+            $extraPaths,
+        );
     }
 
     /**
