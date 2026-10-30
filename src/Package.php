@@ -20,6 +20,7 @@ class Package
      * @param bool $direct Whether this is a direct dependency
      * @param string $constraint Version constraint from manifest
      * @param string|null $path Filesystem path when known
+     * @param string $type Composer package type (e.g. `library`, `cakephp-plugin`)
      */
     public function __construct(
         protected string $name,
@@ -29,6 +30,7 @@ class Package
         protected bool $direct = false,
         protected string $constraint = '',
         protected ?string $path = null,
+        protected string $type = '',
     ) {
     }
 
@@ -113,7 +115,23 @@ class Package
     }
 
     /**
+     * Composer package type (e.g. `library`, `cakephp-plugin`).
+     *
+     * Empty string when the scanner did not provide type metadata
+     * (e.g. JS packages or lock entries without a type).
+     *
+     * @return string
+     */
+    public function type(): string
+    {
+        return $this->type;
+    }
+
+    /**
      * Serialize to array for JSON output.
+     *
+     * Shape is intentionally stable for MCP/app consumers; use
+     * {@see Package::type()} for type-aware filtering in PHP.
      *
      * @return array{
      *     name: string,

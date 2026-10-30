@@ -147,3 +147,40 @@ it('keeps prerelease suffixes and evaluates them with composer semver', function
         ->and($php->uses('vendor/pkg', '>=1.0.0-beta'))->toBeTrue()
         ->and($php->uses('vendor/pkg', '1.0.0-beta.1'))->toBeTrue();
 });
+
+it('filters packages by composer type', function (): void {
+    $php = phpEcosystem([
+        ['name' => 'cakephp/queue', 'type' => 'cakephp-plugin'],
+        ['name' => 'cakephp/cakephp', 'type' => 'library'],
+        ['name' => 'vendor/plain'],
+    ]);
+
+    $plugins = $php->byType('cakephp-plugin');
+
+    expect($plugins->count())->toBe(1)
+        ->and($plugins->all()[0]->name())->toBe('cakephp/queue');
+});
+
+it('filters packages by several composer types', function (): void {
+    $php = phpEcosystem([
+        ['name' => 'cakephp/queue', 'type' => 'cakephp-plugin'],
+        ['name' => 'vendor/bundle', 'type' => 'symfony-bundle'],
+        ['name' => 'cakephp/cakephp', 'type' => 'library'],
+    ]);
+
+    expect($php->packages()->byTypes(['cakephp-plugin', 'symfony-bundle'])->count())->toBe(2)
+        ->and($php->packages()->byType('unknown-type')->count())->toBe(0);
+});
+
+it('exposes installed cakephp plugins and type presence', function (): void {
+    $php = phpEcosystem([
+        ['name' => 'cakephp/queue', 'type' => 'cakephp-plugin'],
+        ['name' => 'cakephp/cakephp', 'type' => 'library'],
+    ]);
+
+    expect($php->cakePlugins()->count())->toBe(1)
+        ->and($php->cakePlugins()->all()[0]->name())->toBe('cakephp/queue')
+        ->and($php->usesType('cakephp-plugin'))->toBeTrue()
+        ->and($php->usesType('library'))->toBeTrue()
+        ->and($php->usesType('unknown-type'))->toBeFalse();
+});

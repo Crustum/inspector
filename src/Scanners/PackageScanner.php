@@ -94,7 +94,11 @@ abstract class PackageScanner
     /**
      * Add dependencies to the collection.
      *
-     * @param array<string, string> $dependencies Package versions
+     * Values may be plain version strings (JS scanners, transitive deps)
+     * or `array{version?: string, type?: string}` metadata (Composer lock
+     * entries). Plain strings keep working unchanged.
+     *
+     * @param array<string, string|array{version?: string, type?: string}> $dependencies Package versions/metadata
      * @param \Crustum\Inspector\PackageCollection $packages Target collection
      * @param bool $isDev Default dev flag for transitive packages
      * @param bool $authoritative Use manifest dev flags when direct
@@ -108,14 +112,23 @@ abstract class PackageScanner
     ): void {
         $direct = $this->directDependencies();
 
-        foreach ($dependencies as $packageName => $version) {
+        foreach ($dependencies as $packageName => $meta) {
             $packageName = (string)$packageName;
 
             if ($packageName === '') {
                 continue;
             }
 
+            if (is_array($meta)) {
+                $version = (string)($meta['version'] ?? '');
+                $type = (string)($meta['type'] ?? '');
+            } else {
+                $version = (string)$meta;
+                $type = '';
+            }
+
             $isDirect = array_key_exists($packageName, $direct);
+            $path = $this->computePath($packageName);
 
             $packages->push(new Package(
                 name: $packageName,
@@ -124,9 +137,28 @@ abstract class PackageScanner
                 dev: $isDirect && !$authoritative ? $direct[$packageName]['isDev'] : $isDev,
                 direct: $isDirect,
                 constraint: $isDirect ? $direct[$packageName]['constraint'] : '',
-                path: $this->computePath($packageName),
+                path: $path,
+                type: $this->resolveType($packageName, $type, $path),
             ));
         }
+    }
+
+    /**
+     * Resolve the composer package type for a package.
+     *
+     * Base implementation returns the lock-provided type as-is so JS
+     * scanners stay unaffected. Composer scanner overrides this to fall
+     * back to the installed package's `composer.json` when the lock
+     * entry carries no type.
+     *
+     * @param string $packageName Package name
+     * @param string $type Type from the lock entry (may be empty)
+     * @param string $path Computed install path for the package
+     * @return string
+     */
+    protected function resolveType(string $packageName, string $type, string $path): string
+    {
+        return $type;
     }
 
     /**

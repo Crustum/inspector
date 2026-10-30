@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Cake\Log\Log;
 use Crustum\Inspector\Enums\PackageSource;
+use Crustum\Inspector\ProjectScan;
 use Crustum\Inspector\Scanners\ComposerLock;
 
 it('parses installed packages with raw names', function (): void {
@@ -196,3 +197,65 @@ it('does not infer a minimum PHP version from an unusable requirement', function
     'development branch' => ['dev-main'],
     'invalid constraint' => ['not-a-version'],
 ]);
+
+it('populates the composer type from lock entries', function (): void {
+    $packages = (new ComposerLock(testDirectory('cake-app')))->scan();
+
+    $queue = inspectorCollection($packages)->first(fn ($p): bool => $p->name() === 'cakephp/queue');
+    expect($queue)->not->toBeNull()
+        ->and($queue->type())->toBe('cakephp-plugin');
+
+    $cakephp = inspectorCollection($packages)->first(fn ($p): bool => $p->name() === 'cakephp/cakephp');
+    expect($cakephp)->not->toBeNull()
+        ->and($cakephp->type())->toBe('library');
+});
+
+it('exposes cakephp plugins from a scanned project', function (): void {
+    $project = ProjectScan::scan(testDirectory('cake-app'));
+
+    $names = array_map(fn ($p) => $p->name(), $project->php()->cakePlugins()->all());
+
+    expect($names)->toContain('cakephp/queue')
+        ->and($project->php()->usesType('cakephp-plugin'))->toBeTrue();
+});
+
+it('falls back to the installed package composer.json when the lock entry has no type', function (): void {
+    $base = tempBase();
+
+    mkdir($base . 'vendor' . DIRECTORY_SEPARATOR . 'acme', 0777, true);
+    mkdir($base . 'vendor' . DIRECTORY_SEPARATOR . 'acme' . DIRECTORY_SEPARATOR . 'plugin', 0777, true);
+    file_put_contents(
+        $base . 'vendor' . DIRECTORY_SEPARATOR . 'acme' . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . 'composer.json',
+        json_encode(['name' => 'acme/plugin', 'type' => 'cakephp-plugin']),
+    );
+    file_put_contents($base . 'composer.lock', json_encode([
+        'packages' => [['name' => 'acme/plugin', 'version' => 'v1.2.0']],
+        'packages-dev' => [],
+    ]));
+
+    $packages = (new ComposerLock($base))->scan();
+    $plugin = inspectorCollection($packages)->first(fn ($p): bool => $p->name() === 'acme/plugin');
+
+    expect($plugin)->not->toBeNull()
+        ->and($plugin->type())->toBe('cakephp-plugin')
+        ->and($plugin->version())->toBe('1.2.0');
+
+    cleanup($base);
+});
+
+it('leaves the type empty when neither lock nor installed metadata provides one', function (): void {
+    $base = tempBase();
+
+    file_put_contents($base . 'composer.lock', json_encode([
+        'packages' => [['name' => 'acme/unknown', 'version' => 'v1.0.0']],
+        'packages-dev' => [],
+    ]));
+
+    $packages = (new ComposerLock($base))->scan();
+    $package = inspectorCollection($packages)->first(fn ($p): bool => $p->name() === 'acme/unknown');
+
+    expect($package)->not->toBeNull()
+        ->and($package->type())->toBe('');
+
+    cleanup($base);
+});

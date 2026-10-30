@@ -8,6 +8,7 @@
     - [Version Constraints](#version-constraints)
     - [Checking Multiple Packages](#checking-multiple-packages)
     - [Retrieving Packages](#retrieving-packages)
+    - [Filtering by Composer Type](#filtering-by-type)
 - [Detecting Stacks and Frontends](#detecting-stacks-and-frontends)
 - [Detecting Agents and Editors](#detecting-agents-and-editors)
 - [Detecting JS Package Managers](#detecting-js-package-managers)
@@ -175,6 +176,38 @@ $project->php()->usesDirect(['cakephp/bake', 'cakephp/queue']);
 $project->php()->packages()->dev();
 $project->php()->packages()->direct();
 ```
+
+<a name="filtering-by-type"></a>
+### Filtering by Composer Type
+
+Composer packages carry a `type` (e.g. `library`, `cakephp-plugin`). Inspector preserves it from `composer.lock` and falls back to the installed package's `composer.json` when the lock entry has none. Use `type()` on a single package, or filter whole collections without affecting the serialized shape:
+
+```php
+$project->php()->package('cakephp/queue')?->type(); // 'cakephp-plugin'
+
+$project->php()->byType('cakephp-plugin')->all();
+$project->php()->cakePlugins()->all(); // shortcut for the above
+$project->php()->usesType('cakephp-plugin'); // true when any plugin is installed
+$project->php()->packages()->byTypes(['cakephp-plugin', 'library']);
+```
+
+<a name="resolving-plugin-classes"></a>
+### Resolving Plugin Classes
+
+For `cakephp-plugin` packages Inspector also resolves the plugin class and Cake name, so consumers can inspect a plugin without loading it. Files are required on demand, and the Cake name comes from the plugin `$name` default (namespace path fallback) — the plugin is never instantiated:
+
+```php
+foreach ($project->php()->cakePluginDetails() as $plugin) {
+    $plugin->package();     // 'cakephp/queue'
+    $plugin->pluginClass(); // 'Cake\Queue\QueuePlugin'
+    $plugin->name();        // 'Cake/Queue'
+    $plugin->path();        // install path
+}
+
+$project->php()->cakePluginDetails(['/path/to/local/checkout']);
+```
+
+The argument scans explicit directories (e.g. local path checkouts absent from `composer.lock`). Packages without a resolvable plugin class are skipped, and each class appears at most once.
 
 > [!NOTE]
 > The development classification of *transitive* packages is available only for Composer and npm lockfiles. Yarn, pnpm, Bun, and Nub lockfiles report transitive packages as production dependencies. Direct dependencies are classified using authoritative lockfile metadata when available and manifest data otherwise.
