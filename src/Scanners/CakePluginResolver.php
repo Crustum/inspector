@@ -138,14 +138,6 @@ class CakePluginResolver
     {
         $candidates = [];
 
-        if (str_contains($composerName, '/')) {
-            [$vendor, $name] = explode('/', $composerName, 2);
-            $vendorPart = Inflector::camelize(str_replace(['-', '_'], ' ', $vendor));
-            $namePart = Inflector::camelize(str_replace(['-', '_'], ' ', $name));
-            $candidates[$vendorPart . '\\' . $namePart . '\\' . $namePart . 'Plugin'] =
-                $packagePath . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . $namePart . 'Plugin.php';
-        }
-
         $psr4 = $composerJson['autoload']['psr-4'] ?? null;
         if (is_array($psr4)) {
             foreach ($psr4 as $prefix => $dirs) {
@@ -166,9 +158,17 @@ class CakePluginResolver
             }
         }
 
+        if (str_contains($composerName, '/')) {
+            [$vendor, $name] = explode('/', $composerName, 2);
+            $vendorPart = Inflector::camelize(str_replace(['-', '_'], ' ', $vendor));
+            $namePart = Inflector::camelize(str_replace(['-', '_'], ' ', $name));
+            $candidates[$vendorPart . '\\' . $namePart . '\\' . $namePart . 'Plugin'] =
+                $packagePath . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . $namePart . 'Plugin.php';
+        }
+
         foreach ($candidates as $class => $file) {
             if (class_exists($class)) {
-                return $class;
+                return self::canonicalClass($class);
             }
 
             if (is_string($file) && is_file($file)) {
@@ -179,12 +179,34 @@ class CakePluginResolver
                 }
 
                 if (class_exists($class)) {
-                    return $class;
+                    return self::canonicalClass($class);
                 }
             }
         }
 
         return null;
+    }
+
+    /**
+     * Canonical plugin class name with declared casing.
+     *
+     * Guessed names may differ in letter case (PHP class names and some
+     * filesystems are case-insensitive). Reflection reports the casing
+     * from the class declaration, so downstream namespace and Cake name
+     * derivation never inherit a miscased guess.
+     *
+     * @param class-string $class Resolved plugin class name
+     * @return class-string Canonical plugin class name
+     */
+    protected static function canonicalClass(string $class): string
+    {
+        try {
+            $canonical = (new ReflectionClass($class))->getName();
+        } catch (Throwable) {
+            return $class;
+        }
+
+        return class_exists($canonical) ? $canonical : $class;
     }
 
     /**

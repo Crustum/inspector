@@ -179,3 +179,27 @@ it('exposes cake plugin details through the ecosystem', function (): void {
     expect($php->cakePluginDetails())->toBe([])
         ->and($php->cakePluginDetails(['/no/such/dir']))->toBe([]);
 });
+
+it('canonicalizes a miscased composer-name guess to the declared casing', function (): void {
+    $base = tempBase();
+    $dir = $base . 'vendor' . DIRECTORY_SEPARATOR . 'acme' . DIRECTORY_SEPARATOR . 'mcplugin' . DIRECTORY_SEPARATOR;
+    mkdir($dir . 'src', 0777, true);
+    file_put_contents(
+        $dir . 'composer.json',
+        json_encode(['name' => 'acme/mcplugin', 'type' => 'cakephp-plugin']),
+    );
+    $pluginFile = $dir . 'src' . DIRECTORY_SEPARATOR . 'McPluginPlugin.php';
+    file_put_contents(
+        $pluginFile,
+        "<?php\ndeclare(strict_types=1);\n\nnamespace Acme\\McPlugin;\n\nclass McPluginPlugin\n{\n}\n",
+    );
+
+    require_once $pluginFile;
+
+    $resolver = new CakePluginResolver();
+    $class = $resolver->resolveClass($dir, ['name' => 'acme/mcplugin', 'type' => 'cakephp-plugin'], 'acme/mcplugin');
+
+    expect($class)->toBe('Acme\\McPlugin\\McPluginPlugin');
+
+    cleanup($base);
+});
